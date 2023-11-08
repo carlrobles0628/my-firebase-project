@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Firebase CRUD Example</title>
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        margin: 0;
+        padding: 0;
+    }
+
+    header {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 20px;
+    }
+
+    h1 {
+        margin: 0;
+    }
+
+    main {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    button {
+        background-color: #333;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table, th, td {
+        border: 1px solid #ddd;
+    }
+
+    th, td {
+        padding: 10px;
+        text-align: left;
+    }
+  </style>
+<body>
+  <h1>Firebase CRUD Example</h1>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  
+  <!-- Form for adding data -->
+  <h2>Add Data</h2>
+  <form id="addDataForm">
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="description" placeholder="Description">
+    <button type="button" onclick="addData()">Add Data</button>
+  </form>
+
+  <!-- Display data from Firebase -->
+  <h2>Display Data</h2>
+  <ul id="dataList"></ul>
+
+  <!-- Form for updating data -->
+  <h2>Update Data</h2>
+  <form id="updateDataForm">
+    <input type="text" id="updateName" placeholder="Name to Update">
+    <input type="text" id="newDescription" placeholder="New Description">
+    <button type="button" onclick="updateData()">Update Data</button>
+  </form>
+
+  <!-- Form for deleting data -->
+  <h2>Delete Data</h2>
+  <form id="deleteDataForm">
+    <input type="text" id="deleteName" placeholder="Name to Delete">
+    <button type="button" onclick="deleteData()">Delete Data</button>
+  </form>
+
+  <!-- Your Firebase configuration -->
+  <script>
+   const firebaseConfig = {
+  apiKey: "AIzaSyDNr2TcTxGElG7R5UwreT92jA2PHz5DzLE",
+  authDomain: "login-with-firebase-data-fbeba.firebaseapp.com",
+  databaseURL: "https://login-with-firebase-data-fbeba-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "login-with-firebase-data-fbeba",
+  storageBucket: "login-with-firebase-data-fbeba.appspot.com",
+  messagingSenderId: "130162189615",
+  appId: "1:130162189615:web:887ffd1103ccd70bdaadda"
+};
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+
+    // Initialize Firebase database reference
+    const db = firebase.database();
+
+    // Function to add data to Firebase
+    function addData() {
+      const name = document.getElementById("name").value;
+      const description = document.getElementById("description").value;
+
+      if (name && description) {
+        const data = {
+          name: name,
+          description: description
+        };
+
+        // Push data to Firebase
+        const dataRef = db.ref("data");
+        dataRef.push(data);
+
+        // Clear form fields
+        document.getElementById("name").value = "";
+        document.getElementById("description").value = "";
+      } else {
+        alert("Name and Description are required.");
+      }
+    }
+
+    // Function to display data from Firebase
+    function displayData() {
+      const dataList = document.getElementById("dataList");
+      dataList.innerHTML = ""; // Clear previous data
+
+      const dataRef = db.ref("data");
+      dataRef.on("value", function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          const data = childSnapshot.val();
+          const listItem = document.createElement("li");
+          listItem.textContent = `${data.name}: ${data.description}`;
+          dataList.appendChild(listItem);
+        });
+      });
+    }
+
+    // Function to update data in Firebase
+    function updateData() {
+      const nameToUpdate = document.getElementById("updateName").value;
+      const newDescription = document.getElementById("newDescription").value;
+
+      if (nameToUpdate && newDescription) {
+        const dataRef = db.ref("data");
+
+        // Find the data to update
+        dataRef.orderByChild("name").equalTo(nameToUpdate).once("value", function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+            childSnapshot.ref.update({ description: newDescription });
+          });
+        });
+
+        // Clear form fields
+        document.getElementById("updateName").value = "";
+        document.getElementById("newDescription").value = "";
+      } else {
+        alert("Name to update and New Description are required.");
+      }
+    }
+
+    // Function to delete data in Firebase
+    function deleteData() {
+      const nameToDelete = document.getElementById("deleteName").value;
+
+      if (nameToDelete) {
+        const dataRef = db.ref("data");
+
+        // Find and remove the data to delete
+        dataRef.orderByChild("name").equalTo(nameToDelete).once("value", function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+            childSnapshot.ref.remove();
+          });
+        });
+
+        // Clear form field
+        document.getElementById("deleteName").value = "";
+      } else {
+        alert("Name to delete is required.");
+      }
+    }
+
+    // Display data when the page loads
+    displayData();
+  </script>
+   <script>
+    // ... (Your Firebase configuration code)
+
+    // Function to sign out
+    function signOut() {
+      firebase.auth().signOut().then(function() {
+        // Sign out success
+        alert("Sign out successful.");
+        window.location.href = "index.html"; // Redirect to index.html
+      }).catch(function(error) {
+        // Handle sign out error
+        alert("Sign out failed. Please try again.");
+      });
+    }
+  </script>
+  <button type="button" onclick="signOut()">Sign Out</button>
+</body>
+</html>
